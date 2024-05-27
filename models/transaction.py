@@ -1,4 +1,3 @@
-from ...model import Model
 from enum import Enum
 from dao import *
 
@@ -10,7 +9,7 @@ class Transactions_Categories(Enum):
     other = "Прочее"
 
 
-class Transaction(Model):
+class Transaction():
 
     @property
     def datetime(self): return self._datetime

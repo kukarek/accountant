@@ -23,8 +23,6 @@ def init():
     connection = sqlite3.connect(Settings().DB.connection)
     cursor = connection.cursor()
     
-    
-
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS Users (
         user_id INTEGER PRIMARY KEY, 
@@ -55,6 +53,5 @@ def init():
     connection.commit()
     connection.close()
 
-    pass
 
 

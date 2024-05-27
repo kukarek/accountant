@@ -1,10 +1,10 @@
-
-
-
+from database import sql
 
 
 
 class UserDAO():
+
+
 
     def transactions(user): 
 
@@ -36,8 +36,6 @@ class UserDAO():
         FROM Transactions
         WHERE user_id = ?;
         '''
-
-        
 
     def add_link(first_user, second_user): 
 

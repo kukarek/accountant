@@ -1,4 +1,5 @@
 from .transaction import Transaction
+from dao import UserDAO
 
 
 class User():
@@ -21,18 +22,18 @@ class User():
     def transactions(self):
 
         transactions = []
-        a = AccountDAO.transactions(self)
-        for entry in AccountDAO.transactions(self):
 
-            #создание обьектов из данных бд
+        for entry in UserDAO.transactions(self):
+
+            #инициализция 
             transactions.append(Transaction(entry[0], entry[1], entry[2]))
 
         return transactions
 
-    def update(self, transaction): AccountDAO.update(self, transaction)
+    def update(self, transaction): UserDAO.update(self, transaction)
 
-    def add_link(self): pass
+    def add_link(self, second_user): UserDAO.add_link(self, second_user)
 
-    def remove_transaction(self, transaction_datetime): AccountDAO.remove_transaction(self, transaction_datetime)
+    def remove_transaction(self, transaction_datetime): UserDAO.remove_transaction(self, transaction_datetime)
 
 

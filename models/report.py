@@ -1,8 +1,6 @@
-from ..model import Model 
-from ..account import Account
 
 
-class Report(Model):
+class Report():
 
     @property
     def accounts(self): return self._accounts 

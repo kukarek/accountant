@@ -6,10 +6,8 @@ from aiogram.dispatcher.filters import Text
 from ..filters.main_filter import *
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
-from models.account.transaction.transaction import Transaction
-from models import Account
+from models import Transaction, Transactions_Categories, User
 from datetime import datetime, timedelta
-from models.account.transaction import Transactions_Categories
 
 
 class States(StatesGroup):
@@ -61,7 +59,7 @@ async def adding_entry(message: types.Message, state: FSMContext):
             data['category']
         )
 
-        Account(message.from_id).update(transaction)
+        User(message.from_id).update(transaction)
 
         await state.reset_state(with_data=True)
 
@@ -78,7 +76,7 @@ async def start_status_handler(message: Message):
 async def remove_entry(message: Message):
 
     #нужно разбить на блоки по 10 транзакций, чтобы обойти ограничения по количеству кнопок в одном сообщении
-    transactions = Account(message.from_id).transactions
+    transactions = User(message.from_id).transactions
 
     if not transactions:
         await message.answer("Нет данных")
@@ -94,7 +92,7 @@ async def removing_entry(query: CallbackQuery):
 
     await query.bot.delete_message(data[3], data[2])
 
-    Account(data[3]).remove_transaction(data[1])
+    User(data[3]).remove_transaction(data[1])
 
     await query.bot.send_message(data[3], "Запись удалена!", reply_markup = keyboard("Добавить запись", "Удалить запись", "Статистика"))
 
