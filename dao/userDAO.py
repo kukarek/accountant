@@ -4,7 +4,15 @@ from database import sql
 
 class UserDAO():
 
+    def init(user_id, username):
 
+        query = f'''
+        INSERT OR IGNORE INTO Users (user_id, username)
+        VALUES (?, ?);
+        '''
+        values = (user_id, username)
+   
+        sql.run(query, values)
 
     def transactions(user): 
 
@@ -44,6 +52,16 @@ class UserDAO():
         VALUES (?, ?);
         '''
         values = (first_user.user_id, second_user.user_id)
+   
+        sql.run(query, values)
+
+    def update(user, transaction):
+
+        query = f'''
+        INSERT INTO Transactions (datetime, user_id, amount, category)
+        VALUES (?, ?, ?, ?);
+        '''
+        values = (transaction.datetime, user.user_id, transaction.amount, transaction.category)
    
         sql.run(query, values)
 

@@ -5,18 +5,23 @@ from misc.settings import Settings
 
 def run(query, values = ()):
 
+    try:
 
-    connection = sqlite3.connect(Settings().DB.connection)
-    cursor = connection.cursor()
+        connection = sqlite3.connect(Settings().DB.connection)
+        cursor = connection.cursor()
+        
+        cursor.execute(query, values)
+
+        result = cursor.fetchall()
+
+        connection.commit()
+        connection.close()
+
+        return result
     
-    cursor.execute(query, values)
+    except Exception as e:
 
-    result = cursor.fetchall()
-
-    connection.commit()
-    connection.close()
-
-    return result
+        print(f"Произошла ошибка в запросе sql: {e}")
 
 def init():
 
@@ -26,14 +31,13 @@ def init():
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS Users (
         user_id INTEGER PRIMARY KEY, 
-        username TEXT,
-        categories TEXT
+        username TEXT
     );
     """)
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS Transactions (
-        transaction_id INTEGER PRIMARY KEY AUTOINCREMENT, 
+        datetime DATETIME PRIMARY KEY, 
         user_id INTEGER, 
         amount INTEGER, 
         category TEXT, 

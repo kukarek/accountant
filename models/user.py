@@ -15,6 +15,8 @@ class User():
         self._user_id = user_id
         self._username = username
 
+        UserDAO.init(user_id, username)
+
     @property
     def name(self): return self._name
 
@@ -34,6 +36,6 @@ class User():
 
     def add_link(self, second_user): UserDAO.add_link(self, second_user)
 
-    def remove_transaction(self, transaction_datetime): UserDAO.remove_transaction(self, transaction_datetime)
+    def remove_transaction(self, transaction_datetime): pass #UserDAO.remove_transaction(self, transaction_datetime)
 
 
