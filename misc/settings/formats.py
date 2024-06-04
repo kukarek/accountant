@@ -4,4 +4,4 @@
 class Format:
 
     @property 
-    def datetime(self): return "%d.%m.%Y %H:%M:%S"
+    def datetime(self): return "%Y.%m.%d %H:%M:%S"

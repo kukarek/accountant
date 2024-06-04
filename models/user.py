@@ -36,6 +36,6 @@ class User():
 
     def add_link(self, second_user): UserDAO.add_link(self, second_user)
 
-    def remove_transaction(self, transaction_datetime): pass #UserDAO.remove_transaction(self, transaction_datetime)
+    def remove_transaction(self, transaction_datetime): UserDAO.remove_transaction(transaction_datetime)
 
 

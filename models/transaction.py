@@ -18,12 +18,6 @@ class Transaction():
     def amount(self): return self._amount
 
     @property
-    def type(self): return self._type
-
-    @type.setter
-    def type(self, t_type): self._type = t_type
-
-    @property
     def category(self): return self._category
 
     def __init__(self, datetime = None, amount = None, category = None) -> None:

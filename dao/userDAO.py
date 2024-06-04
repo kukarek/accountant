@@ -17,10 +17,12 @@ class UserDAO():
     def transactions(user): 
 
         query = f'''
-        SELECT * FROM Transactions
-        WHERE user_id = ?
+        SELECT t.datetime, t.amount, t.category, u.username
+        FROM Transactions t
+        JOIN Users u ON t.user_id = u.user_id
+        WHERE u.user_id = ?
         '''
-        values = (user.user_id)
+        values = (user.user_id,)
         return sql.run(query, values)   
 
     def joint_transactions(user):
@@ -29,7 +31,7 @@ class UserDAO():
         SELECT second_user_id FROM AccontLinks 
         WHERE first_user_id = ?
         '''
-        values = (user.user_id)
+        values = (user.user_id,)
 
         linked_users = sql.run(query, values)
 
@@ -62,6 +64,16 @@ class UserDAO():
         VALUES (?, ?, ?, ?);
         '''
         values = (transaction.datetime, user.user_id, transaction.amount, transaction.category)
+   
+        sql.run(query, values)
+
+    def remove_transaction(transaction_datetime):
+
+        query = f'''
+        DELETE FROM Transactions
+        WHERE datetime = ?;
+        '''
+        values = (transaction_datetime,)
    
         sql.run(query, values)
 
