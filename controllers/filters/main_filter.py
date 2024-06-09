@@ -1,9 +1,9 @@
-from aiogram.dispatcher.filters import BoundFilter
+from aiogram.filters import Filter
 from aiogram import types
 import os
 from misc.settings import Settings
 
-class isUser(BoundFilter):
+class isUser(Filter):
 
     async def check(self, message: types.Message) -> bool:
 

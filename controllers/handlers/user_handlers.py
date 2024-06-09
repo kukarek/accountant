@@ -1,14 +1,14 @@
 from ..keyboards import *
-from aiogram import Dispatcher
+from aiogram import Dispatcher, F
 from aiogram.types import Message, CallbackQuery
 from ..keyboards.keyboards import *
-from aiogram.dispatcher.filters import Text
 from ..filters.main_filter import *
-from aiogram.dispatcher import FSMContext
-from aiogram.dispatcher.filters.state import State, StatesGroup
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import StatesGroup, State
 from models import Transaction, Transactions_Categories, User
 from stats import Stats
 from datetime import datetime, timedelta
+from misc.settings import Settings
 
 
 class States(StatesGroup):
@@ -68,7 +68,7 @@ async def adding_entry(message: types.Message, state: FSMContext):
 
         await message.answer("Запись добавлена!", reply_markup=keyboard("Добавить запись", "Удалить запись", "Статистика"))
 
-
+@Settings.dp.message_handler(isUser(), commands=['start'])
 async def start_status_handler(message: Message, state: FSMContext):
     
     await state.reset_state(with_data=True)
@@ -136,21 +136,21 @@ async def stats_for_the_period(message: Message, state: FSMContext):
     await message.answer(Stats.for_the_period(message.from_id, d1, d2))
 
 def register_user_handlers(dp: Dispatcher):
+    
+    @dp.message_handler(start_status_handler, isUser(), commands=['start'])
+    @dp.message_handler(adding_entry, isUser(), F.contains("Добавить запись"))
+    @dp.message_handler(remove_entry, isUser(), F.contains("Удалить запись"))
+    @dp.message_handler(adding_entry, isUser(), state=States.amount)
+    @dp.message_handler(adding_entry, isUser(), state=States.category)
+    @dp.message_handler(adding_entry, isUser(), state=States.date)
+    @dp.message_handler(stats, isUser(), F.contains("Статистика"))
+    @dp.message_handler(stats_per_mounth, isUser(), F.contains("Месяц"))
+    @dp.message_handler(stats_all_time, isUser(), F.contains("Все время"))
+    @dp.message_handler(await_stats_period, isUser(), F.contains("Ввести вручную"))
+    @dp.message_handler(stats_for_the_period, isUser(), state=States.input_stats_period)
 
-    dp.register_message_handler(start_status_handler, isUser(), commands=['start'])
-    dp.register_message_handler(adding_entry, isUser(), Text(equals=("Добавить запись")))
-    dp.register_message_handler(remove_entry, isUser(), Text(equals=("Удалить запись")))
-    dp.register_message_handler(adding_entry, isUser(), state=States.amount)
-    dp.register_message_handler(adding_entry, isUser(), state=States.category)
-    dp.register_message_handler(adding_entry, isUser(), state=States.date)
-    dp.register_message_handler(stats, isUser(), Text(equals=("Статистика")))
-    dp.register_message_handler(stats_per_mounth, isUser(), Text(equals=("Месяц")))
-    dp.register_message_handler(stats_all_time, isUser(), Text(equals=("Все время")))
-    dp.register_message_handler(await_stats_period, isUser(), Text(equals=("Ввести вручную")))
-    dp.register_message_handler(stats_for_the_period, isUser(), state=States.input_stats_period)
 
-
-    dp.register_callback_query_handler(removing_entry, lambda query: query.data.startswith("Remove"))
+    @dp.callback_query_handler(removing_entry, lambda query: query.data.startswith("Remove"))
 
 
 
