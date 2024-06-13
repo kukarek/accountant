@@ -1,21 +1,16 @@
-from aiogram import Bot, Dispatcher
-from aiogram.fsm.storage.memory import MemoryStorage
-from controllers.handlers import register_user_handlers
-from misc.settings import Settings
+from aiogram import Bot
+from controllers.handlers.user_handlers import dp, Settings
 import database
 import asyncio
 
 
 async def start():
 
-    storage = MemoryStorage()
     bot = Bot(token = Settings().tokens.API_TOKEN_TEST)
-    dp = Dispatcher(storage = storage)
-    register_user_handlers(dp)
+    
     database.init()
-    await dp.run_polling(bot)
 
-if __name__ == "__main__":
+    await dp.start_polling(bot)
 
-    asyncio.run(start())
- 
+loop = asyncio.get_event_loop()
+results = loop.run_until_complete(start())

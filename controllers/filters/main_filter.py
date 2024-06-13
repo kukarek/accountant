@@ -5,7 +5,7 @@ from misc.settings import Settings
 
 class isUser(Filter):
 
-    async def check(self, message: types.Message) -> bool:
+    async def __call__(self, message: types.Message) -> bool:
 
         for user in Settings().admins:
             if user == message.from_id:

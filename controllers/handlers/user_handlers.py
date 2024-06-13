@@ -1,5 +1,6 @@
 from ..keyboards import *
-from aiogram import Dispatcher, F
+from aiogram import Dispatcher, F, Router
+from aiogram.filters import Command
 from aiogram.types import Message, CallbackQuery
 from ..keyboards.keyboards import *
 from ..filters.main_filter import *
@@ -7,9 +8,12 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from models import Transaction, Transactions_Categories, User
 from stats import Stats
+from aiogram.fsm.storage.memory import MemoryStorage
 from datetime import datetime, timedelta
 from misc.settings import Settings
 
+dp = Dispatcher(storage = MemoryStorage())
+router = Router()
 
 class States(StatesGroup):
 
@@ -19,6 +23,10 @@ class States(StatesGroup):
 
     input_stats_period = State()
 
+@router.message((isUser()) & (F.text == "Добавить запись"))
+@router.message(isUser(), States.amount)
+@router.message(isUser(), States.category)
+@router.message(isUser(), States.date)
 async def adding_entry(message: types.Message, state: FSMContext):
     
     current_state = await state.get_state()
@@ -31,7 +39,7 @@ async def adding_entry(message: types.Message, state: FSMContext):
 
     elif message.text == "Отмена":
 
-        await state.reset_state(with_data=True)
+        await state.clear()
 
         await message.answer("Запись удалена!", reply_markup=keyboard("Добавить запись", "Удалить запись", "Статистика")) 
 
@@ -48,7 +56,7 @@ async def adding_entry(message: types.Message, state: FSMContext):
 
         await state.update_data(amount=message.text)
         await message.answer("Введите категорию: ", reply_markup=keyboard(*[item.value for item in Transactions_Categories], "Отмена"))
-        await States.category.set()
+        await States.category()
 
     elif current_state == States.category.state:
 
@@ -64,26 +72,27 @@ async def adding_entry(message: types.Message, state: FSMContext):
 
         User(message.from_id, message.from_user.first_name).update(transaction)
 
-        await state.reset_state(with_data=True)
+        await state.clear()
 
         await message.answer("Запись добавлена!", reply_markup=keyboard("Добавить запись", "Удалить запись", "Статистика"))
 
-@Settings.dp.message_handler(isUser(), commands=['start'])
+@dp.message(Command('start'))
 async def start_status_handler(message: Message, state: FSMContext):
     
-    await state.reset_state(with_data=True)
+    await state.clear()
 
-    User(message.from_id, message.from_user.first_name)
+    User(message.from_user.id, message.from_user.first_name)
 
     text = ("Бим бим бам бам\n\n"+
             "Скока заработави?")
 
     await message.answer(text, reply_markup = keyboard("Добавить запись", "Удалить запись", "Статистика"))
 
+@router.message(isUser(), F.contains("Удалить запись"))
 async def remove_entry(message: Message):
 
     #каждая запись - сообщение с кнопкой
-    transactions = User(message.from_id, message.from_user.first_name).transactions
+    transactions = User(message.from_user.id, message.from_user.first_name).transactions
 
     if not transactions:
         await message.answer("Нет данных")
@@ -94,7 +103,7 @@ async def remove_entry(message: Message):
         mess = await message.answer(f"{t.datetime[:5]} {t.category} {t.amount}р ")
         await mess.edit_reply_markup(inline_keyboard(("Удалить", f"Remove/{t.datetime}/{mess.message_id}/{message.from_id}")))
 
-
+@router.callback_query(lambda query: query.data.startswith("Remove"))
 async def removing_entry(query: CallbackQuery):
 
     data = query.data.split('/')
@@ -105,27 +114,32 @@ async def removing_entry(query: CallbackQuery):
 
     await query.bot.send_message(data[3], "Запись удалена!", reply_markup = keyboard("Добавить запись", "Удалить запись", "Статистика"))
 
+@router.message(isUser(), F.text == "Статистика")
 async def stats(message: Message):
 
     await message.answer("Выберите период:", reply_markup=keyboard("Месяц", "Все время","Ввести вручную"))
 
+@router.message(isUser(), F.text == "Месяц")
 async def stats_per_mounth(message: Message):
 
-    await message.answer(Stats.per_month(message.from_id))
+    await message.answer(Stats.per_month(message.from_user.id))
 
+@router.message(isUser(), F.text == "Все время")
 async def stats_all_time(message: Message):
 
-    await message.answer(Stats.all_time(message.from_id))
+    await message.answer(Stats.all_time(message.from_user.id))
 
+@router.message(isUser(), F.text == "Ввести вручную")
 async def await_stats_period(message: Message):
 
     await States.input_stats_period.set()
 
     await message.answer("Пример: с 05.05 по 03.06")
 
+@router.message(isUser(), States.input_stats_period)
 async def stats_for_the_period(message: Message, state: FSMContext):
 
-    await state.reset_state(with_data=True)
+    await state.clear()
 
     dates = message.text.split()[1:4:2]
 
@@ -133,24 +147,7 @@ async def stats_for_the_period(message: Message, state: FSMContext):
     d2 = datetime(year=datetime.now().year, month=int(dates[1].split(".")[1]), day=int(dates[1].split(".")[0]), hour=23, minute=59).strftime(Settings().format.datetime)
 
 
-    await message.answer(Stats.for_the_period(message.from_id, d1, d2))
-
-def register_user_handlers(dp: Dispatcher):
-    
-    @dp.message_handler(start_status_handler, isUser(), commands=['start'])
-    @dp.message_handler(adding_entry, isUser(), F.contains("Добавить запись"))
-    @dp.message_handler(remove_entry, isUser(), F.contains("Удалить запись"))
-    @dp.message_handler(adding_entry, isUser(), state=States.amount)
-    @dp.message_handler(adding_entry, isUser(), state=States.category)
-    @dp.message_handler(adding_entry, isUser(), state=States.date)
-    @dp.message_handler(stats, isUser(), F.contains("Статистика"))
-    @dp.message_handler(stats_per_mounth, isUser(), F.contains("Месяц"))
-    @dp.message_handler(stats_all_time, isUser(), F.contains("Все время"))
-    @dp.message_handler(await_stats_period, isUser(), F.contains("Ввести вручную"))
-    @dp.message_handler(stats_for_the_period, isUser(), state=States.input_stats_period)
-
-
-    @dp.callback_query_handler(removing_entry, lambda query: query.data.startswith("Remove"))
+    await message.answer(Stats.for_the_period(message.from_user.id, d1, d2))
 
 
 

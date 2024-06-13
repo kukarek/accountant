@@ -1,18 +1,10 @@
-from aiogram import Bot, Dispatcher
-from aiogram.fsm.storage.memory import MemoryStorage
-from misc.settings import Settings
-import database
+
 from .template_messages import Template_Messages
 from .tokens import Tokens
 from .db import DB
 from .formats import Format
 
-class Settings():
-
-    storage = MemoryStorage()
-    bot = Bot(token = Settings().tokens.API_TOKEN_TEST)
-    dp = Dispatcher(storage = storage)
-    database.init()
+class Settings():    
 
     @property
     def tokens(self): return Tokens()
