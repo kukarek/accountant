@@ -8,7 +8,7 @@ class isUser(Filter):
     async def __call__(self, message: types.Message) -> bool:
 
         for user in Settings().admins:
-            if user == message.from_id:
+            if user == message.from_user.id:
                 return True
             
         return False

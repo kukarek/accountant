@@ -13,7 +13,6 @@ from datetime import datetime, timedelta
 from misc.settings import Settings
 
 dp = Dispatcher(storage = MemoryStorage())
-router = Router()
 
 class States(StatesGroup):
 
@@ -23,10 +22,10 @@ class States(StatesGroup):
 
     input_stats_period = State()
 
-@router.message((isUser()) & (F.text == "Добавить запись"))
-@router.message(isUser(), States.amount)
-@router.message(isUser(), States.category)
-@router.message(isUser(), States.date)
+@dp.message(isUser(), (F.text == "Добавить запись"))
+@dp.message(isUser(), States.amount)
+@dp.message(isUser(), States.category)
+@dp.message(isUser(), States.date)
 async def adding_entry(message: types.Message, state: FSMContext):
     
     current_state = await state.get_state()
@@ -35,7 +34,7 @@ async def adding_entry(message: types.Message, state: FSMContext):
         
         await state.update_data(type=message.text)
         await message.answer("Выберите день: ", reply_markup=keyboard("Сегодня", "Вчера", "Отмена"))
-        await States.date.set()
+        await state.set_state(States.date)
 
     elif message.text == "Отмена":
 
@@ -50,13 +49,13 @@ async def adding_entry(message: types.Message, state: FSMContext):
 
         await state.update_data(date=date)
         await message.answer("Введите сумму: ", reply_markup=keyboard("Отмена"))
-        await States.amount.set()
+        await state.set_state(States.amount)
 
     elif current_state == States.amount.state:
 
         await state.update_data(amount=message.text)
         await message.answer("Введите категорию: ", reply_markup=keyboard(*[item.value for item in Transactions_Categories], "Отмена"))
-        await States.category()
+        await state.set_state(States.category)
 
     elif current_state == States.category.state:
 
@@ -70,7 +69,7 @@ async def adding_entry(message: types.Message, state: FSMContext):
             data['category']
         )
 
-        User(message.from_id, message.from_user.first_name).update(transaction)
+        User(message.from_user.id, message.from_user.first_name).update(transaction)
 
         await state.clear()
 
@@ -88,7 +87,7 @@ async def start_status_handler(message: Message, state: FSMContext):
 
     await message.answer(text, reply_markup = keyboard("Добавить запись", "Удалить запись", "Статистика"))
 
-@router.message(isUser(), F.contains("Удалить запись"))
+@dp.message(isUser(), F.text == "Удалить запись")
 async def remove_entry(message: Message):
 
     #каждая запись - сообщение с кнопкой
@@ -101,9 +100,9 @@ async def remove_entry(message: Message):
     for t in transactions:
 
         mess = await message.answer(f"{t.datetime[:5]} {t.category} {t.amount}р ")
-        await mess.edit_reply_markup(inline_keyboard(("Удалить", f"Remove/{t.datetime}/{mess.message_id}/{message.from_id}")))
+        await mess.edit_reply_markup(str(mess.message_id), inline_keyboard(("Удалить", f"Remove/{t.datetime}/{mess.message_id}/{message.from_user.id}")))
 
-@router.callback_query(lambda query: query.data.startswith("Remove"))
+@dp.callback_query(lambda query: query.data.startswith("Remove"))
 async def removing_entry(query: CallbackQuery):
 
     data = query.data.split('/')
@@ -114,29 +113,29 @@ async def removing_entry(query: CallbackQuery):
 
     await query.bot.send_message(data[3], "Запись удалена!", reply_markup = keyboard("Добавить запись", "Удалить запись", "Статистика"))
 
-@router.message(isUser(), F.text == "Статистика")
+@dp.message(isUser(), F.text == "Статистика")
 async def stats(message: Message):
 
     await message.answer("Выберите период:", reply_markup=keyboard("Месяц", "Все время","Ввести вручную"))
 
-@router.message(isUser(), F.text == "Месяц")
+@dp.message(isUser(), F.text == "Месяц")
 async def stats_per_mounth(message: Message):
 
     await message.answer(Stats.per_month(message.from_user.id))
 
-@router.message(isUser(), F.text == "Все время")
+@dp.message(isUser(), F.text == "Все время")
 async def stats_all_time(message: Message):
 
     await message.answer(Stats.all_time(message.from_user.id))
 
-@router.message(isUser(), F.text == "Ввести вручную")
-async def await_stats_period(message: Message):
+@dp.message(isUser(), F.text == "Ввести вручную")
+async def await_stats_period(message: Message, state: FSMContext):
 
-    await States.input_stats_period.set()
+    await state.set_state(States.input_stats_period)
 
     await message.answer("Пример: с 05.05 по 03.06")
 
-@router.message(isUser(), States.input_stats_period)
+@dp.message(isUser(), States.input_stats_period)
 async def stats_for_the_period(message: Message, state: FSMContext):
 
     await state.clear()

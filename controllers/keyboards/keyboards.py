@@ -1,26 +1,37 @@
-from aiogram import types
+from aiogram.types import KeyboardButton, ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 
 
 def keyboard(*args):
 
-    keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True)
+
+    # Создаем список списков с кнопками
+    keyboard: list[list[KeyboardButton]] = []
 
     for arg in args:
 
-        keyboard.add(types.KeyboardButton(arg))
+        keyboard.append([KeyboardButton(text=arg)])
 
-    return keyboard
+    # Создаем объект клавиатуры, добавляя в него кнопки
+    my_keyboard = ReplyKeyboardMarkup(
+        keyboard=keyboard,
+        resize_keyboard=True
+    )
+
+
+    return my_keyboard
 
 def inline_keyboard(*args):
     """
     Принимает массив кортежей (текст кнопки, callback data)
     """
-    keyboard = types.InlineKeyboardMarkup(row_width=1)
+    
+    builder = InlineKeyboardBuilder()
 
     for arg in args:
 
-        keyboard.add(types.InlineKeyboardButton(arg[0], callback_data = arg[1]))
+        builder.row(InlineKeyboardButton(text=arg[0], callback_data=arg[1]))
 
-    return keyboard
 
+    return builder.as_markup()
