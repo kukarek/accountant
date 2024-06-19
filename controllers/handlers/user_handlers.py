@@ -1,5 +1,5 @@
 from ..keyboards import *
-from aiogram import Dispatcher, F, Router
+from aiogram import Dispatcher, F
 from aiogram.filters import Command
 from aiogram.types import Message, CallbackQuery
 from ..keyboards.keyboards import *
@@ -75,7 +75,8 @@ async def adding_entry(message: types.Message, state: FSMContext):
 
         await message.answer("Запись добавлена!", reply_markup=keyboard("Добавить запись", "Удалить запись", "Статистика"))
 
-@dp.message(Command('start'))
+@dp.message(isUser(), F.text == "Главное меню")
+@dp.message(isUser(), Command('start'))
 async def start_status_handler(message: Message, state: FSMContext):
     
     await state.clear()
@@ -99,7 +100,7 @@ async def remove_entry(message: Message):
     
     for t in transactions:
 
-        mess = await message.answer(f"{t.datetime[:5]} {t.category} {t.amount}р ")
+        mess = await message.answer(f"{t.datetime[5:10]} {t.category} {t.amount}р ")
         await mess.edit_reply_markup(str(mess.message_id), inline_keyboard(("Удалить", f"Remove/{t.datetime}/{mess.message_id}/{message.from_user.id}")))
 
 @dp.callback_query(lambda query: query.data.startswith("Remove"))
@@ -116,7 +117,7 @@ async def removing_entry(query: CallbackQuery):
 @dp.message(isUser(), F.text == "Статистика")
 async def stats(message: Message):
 
-    await message.answer("Выберите период:", reply_markup=keyboard("Месяц", "Все время","Ввести вручную"))
+    await message.answer("Выберите период:", reply_markup=keyboard("Месяц", "Все время","Ввести вручную", "Главное меню"))
 
 @dp.message(isUser(), F.text == "Месяц")
 async def stats_per_mounth(message: Message):

@@ -19,11 +19,10 @@ def keyboard(*args):
         resize_keyboard=True
     )
 
-
     return my_keyboard
 
 def inline_keyboard(*args):
-    """
+    """S
     Принимает массив кортежей (текст кнопки, callback data)
     """
     
@@ -32,6 +31,5 @@ def inline_keyboard(*args):
     for arg in args:
 
         builder.row(InlineKeyboardButton(text=arg[0], callback_data=arg[1]))
-
 
     return builder.as_markup()
